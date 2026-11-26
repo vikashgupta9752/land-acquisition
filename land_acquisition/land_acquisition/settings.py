@@ -23,7 +23,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-r*oi#kbxuzipp@n#d6$b(yvcu4tcad5d121_6(*bu33&9dpuf5'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+import os
+
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
+
+# Allow all hosts on Vercel (Vercel proxies with its own domain)
+ALLOWED_HOSTS = ['*']
+
+# Security settings for Vercel
+if os.getenv('VERCEL'):
+    SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'unsafe-secret')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Use WhiteNoise for static files
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATIC_URL = '/static/'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # Media files stored in temporary directory
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'tmp_media')
+    MEDIA_URL = '/media/'
+else:
+    # Existing development settings
+    SECRET_KEY = 'django-insecure-r*oi#kbxuzipp@n#d6$b(yvcu4tcad5d121_6(*bu33\u00269dpuf5'
+    STATIC_URL = '/static/'
+    STATICFILES_DIRS = [BASE_DIR / 'static']
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 ALLOWED_HOSTS = []
 
