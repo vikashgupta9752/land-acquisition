@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.project_code }} | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h3 class="fw-bold mb-0">{{ project.project_code }} &mdash; {{ project.name }}</h3>
+        <p class="text-muted small mb-0">{{ project.department.name }} &bull; {{ project.village }}, {{ project.district }}, {{ project.state }}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% if user.profile.role == 'ADMIN' or user.profile.role == 'OFFICER' %}
+            <a href="{% url 'land_records:create' %}?project={{ project.pk }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Add Land Record</a>
+            <a href="{% url 'projects:publish_notification' project.pk %}" class="btn btn-warning btn-sm"><i class="bi bi-megaphone me-1"></i>Publish Notice</a>
+            <a href="{% url 'projects:project_edit' project.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3">
+            <div class="small text-muted">Required Area</div>
+            <div class="fs-4 fw-bold">{{ project.required_area_acres }} Ac</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card accent-success p-3">
+            <div class="small text-muted">Acquired Area</div>
+            <div class="fs-4 fw-bold">{{ project.acquired_area_acres }} Ac</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card accent-warning p-3">
+            <div class="small text-muted">Pending Area</div>
+            <div class="fs-4 fw-bold">{{ project.pending_area_acres }} Ac</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card accent-info p-3">
+            <div class="small text-muted">Current Status ({{ project.progress_percent }}%)</div>
+            <div><span class="badge bg-{{ project.status_badge }}">{{ project.get_status_display }}</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card card-gov h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Interactive Parcel Map</span>
+                <span class="small">
+                    <span class="badge bg-success">Acquired</span>
+                    <span class="badge bg-warning text-dark">Surveyed</span>
+                    <span class="badge bg-danger">Pending</span>
+                </span>
+            </div>
+            <div class="card-body">
+                <div id="projectDetailMap" class="map-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        {% if user.profile.role == 'ADMIN' or user.profile.role == 'OFFICER' %}
+        <div class="card card-gov mb-3">
+            <div class="card-header">Update Status / Log Exception</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'projects:project_update_status' project.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-2">{{ status_form.status }}</div>
+                    <div class="mb-2">{{ status_form.remarks }}</div>
+                    <div class="form-check mb-2">
+                        {{ status_form.is_exception }}
+                        <label class="form-check-label small">{{ status_form.is_exception.label }}</label>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small text-muted">Exception Reason (if applicable)</label>
+                        {{ status_form.exception_reason }}
+                    </div>
+                    <button class="btn btn-sm btn-primary">Save Status Update</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card card-gov">
+            <div class="card-header">Official Documents</div>
+            <div class="card-body">
+                {% if user.profile.role == 'ADMIN' or user.profile.role == 'OFFICER' %}
+                <form method="post" action="{% url 'projects:project_upload_document' project.pk %}" enctype="multipart/form-data" class="mb-3">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-6">{{ doc_form.title }}</div>
+                        <div class="col-6">{{ doc_form.document_type }}</div>
+                        <div class="col-8">{{ doc_form.file }}</div>
+                        <div class="col-4"><button class="btn btn-sm btn-outline-primary w-100">Upload</button></div>
+                    </div>
+                </form>
+                {% endif %}
+                <ul class="list-group list-group-flush">
+                    {% for doc in documents %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <div class="small fw-semibold">{{ doc.title }}</div>
+                            <div class="small text-muted">{{ doc.get_document_type_display }}</div>
+                        </div>
+                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item px-0 small text-muted">No documents uploaded yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-gov mb-4">
+    <div class="card-header">Registered Land Parcels ({{ land_records.count }})</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr><th>Survey / Plot</th><th>Landowner</th><th>Village</th><th>Area (Ac)</th><th>Type</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for lr in land_records %}
+                <tr>
+                    <td><a href="{% url 'land_records:detail' lr.pk %}" class="fw-semibold">{{ lr.survey_number }} / {{ lr.plot_number }}</a></td>
+                    <td>{{ lr.landowner.full_name }}</td>
+                    <td class="small">{{ lr.village }}</td>
+                    <td>{{ lr.area_acres }}</td>
+                    <td class="small">{{ lr.get_land_type_display }}</td>
+                    <td><span class="badge bg-{{ lr.status_badge }}">{{ lr.get_acquisition_status_display }}</span></td>
+                    <td>
+                        <a href="{% url 'land_records:detail' lr.pk %}" class="btn btn-sm btn-outline-primary">Manage</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">No land records registered for this project.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card card-gov">
+    <div class="card-header">Status &amp; Exception History</div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead class="table-light">
+                <tr><th>Timestamp</th><th>Parcel</th><th>Status</th><th>Remarks</th><th>Updated By</th></tr>
+            </thead>
+            <tbody>
+                {% for h in status_history %}
+                <tr>
+                    <td class="small">{{ h.created_at|date:"Y-m-d H:i" }}</td>
+                    <td class="small">{{ h.land_record|default:"Project-level" }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ h.get_status_display }}</span>
+                        {% if h.is_exception %}<span class="badge bg-danger">Exception</span>{% endif %}
+                    </td>
+                    <td class="small">{{ h.remarks }} {% if h.exception_reason %}<em>({{ h.exception_reason }})</em>{% endif %}</td>
+                    <td class="small">{{ h.updated_by.username|default:"System" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const markers = {{ parcel_markers_json|safe }};
+    const centerLat = {{ project.latitude|default:"19.0760" }};
+    const centerLng = {{ project.longitude|default:"72.8777" }};
+    const map = L.map('projectDetailMap').setView([centerLat, centerLng], 12);
+    nlamsAddTileLayer(map);
+
+    const projectGeo = '{{ project.boundary_geojson|escapejs }}';
+    if (projectGeo) {
+        try {
+            L.geoJSON(JSON.parse(projectGeo), { style: { color: '#1b4f72', weight: 2 } }).addTo(map);
+        } catch(e) {}
+    }
+
+    const colors = { acquired: '#198754', surveyed: '#f39c12', pending: '#dc3545' };
+    markers.forEach(m => {
+        const circle = L.circleMarker([m.lat, m.lng], {
+            radius: 8,
+            fillColor: colors[m.category] || '#dc3545',
+            color: '#fff',
+            weight: 2,
+            fillOpacity: 0.9
+        }).addTo(map);
+        circle.bindPopup(`<strong>Survey ${m.survey_number} / Plot ${m.plot_number}</strong><br>Owner: ${m.owner}<br>Area: ${m.area_acres} Ac<br>Status: ${m.status}`);
+        if (m.geojson) {
+            try { L.geoJSON(JSON.parse(m.geojson), { style: { color: colors[m.category], weight: 2 } }).addTo(map); } catch(e) {}
+        }
+    });
+});
+</script>
+{% endblock %}

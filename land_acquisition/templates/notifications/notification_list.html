@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Notifications | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Notifications &amp; Official Notices</h3>
+    <a href="{% url 'notifications:mark_all_read' %}" class="btn btn-sm btn-outline-primary">Mark All as Read</a>
+</div>
+<div class="card card-gov">
+    <div class="list-group list-group-flush">
+        {% for n in notifications %}
+        <div class="list-group-item {% if not n.is_read %}bg-light{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="badge bg-{% if n.is_official_notice %}warning text-dark{% else %}primary{% endif %} me-1">{{ n.get_notification_type_display }}</span>
+                    <strong>{{ n.title }}</strong>
+                    {% if not n.is_read %}<span class="badge bg-danger ms-1">New</span>{% endif %}
+                    <p class="small mb-1 mt-1">{{ n.message }}</p>
+                    <small class="text-muted">{{ n.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if n.attachment %}
+                        <a href="{{ n.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download"></i></a>
+                    {% endif %}
+                    {% if not n.is_read %}
+                        <a href="{% url 'notifications:mark_read' n.pk %}" class="btn btn-sm btn-outline-success">Mark Read</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-center text-muted py-4">No notifications yet.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

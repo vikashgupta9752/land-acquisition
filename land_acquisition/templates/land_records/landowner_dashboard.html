@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}My Land Dashboard | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0">Citizen / Landowner Portal</h3>
+        <p class="text-muted small mb-0">Welcome, {{ landowner.full_name }} ({{ landowner.village }}, {{ landowner.district }})</p>
+    </div>
+    <a href="{% url 'objections:submit' %}" class="btn btn-danger btn-sm"><i class="bi bi-chat-left-text me-1"></i>Submit Objection</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Registered Land Area</div>
+            <div class="fs-4 fw-bold">{{ total_area }} Acres</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card accent-info p-3">
+            <div class="text-muted small">Proposed Compensation</div>
+            <div class="fs-4 fw-bold">₹{{ total_proposed|floatformat:0 }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card accent-success p-3">
+            <div class="text-muted small">Approved Compensation</div>
+            <div class="fs-4 fw-bold">₹{{ total_approved|floatformat:0 }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card accent-warning p-3">
+            <div class="text-muted small">Total Received</div>
+            <div class="fs-4 fw-bold">₹{{ total_paid|floatformat:0 }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-gov mb-4">
+    <div class="card-header">My Registered Land Parcels</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr><th>Project</th><th>Survey / Plot</th><th>Location</th><th>Area</th><th>Acquisition Status</th><th>Possession</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for lr in land_records %}
+                <tr>
+                    <td class="small fw-semibold">{{ lr.project.project_code }} &mdash; {{ lr.project.name }}</td>
+                    <td>{{ lr.survey_number }} / {{ lr.plot_number }}</td>
+                    <td class="small">{{ lr.village }}, {{ lr.district }}</td>
+                    <td>{{ lr.area_acres }} Ac</td>
+                    <td><span class="badge bg-{{ lr.status_badge }}">{{ lr.get_acquisition_status_display }}</span></td>
+                    <td><span class="badge bg-secondary">{{ lr.get_possession_status_display }}</span></td>
+                    <td>
+                        <a href="{% url 'land_records:detail' lr.pk %}" class="btn btn-sm btn-outline-primary">Details</a>
+                        <a href="{% url 'objections:submit' %}?land_record={{ lr.pk }}" class="btn btn-sm btn-outline-danger">Object</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">No land records linked to your account yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card card-gov h-100">
+            <div class="card-header">Official Acquisition Notifications</div>
+            <div class="list-group list-group-flush">
+                {% for n in official_notices %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ n.title }}</strong>
+                        <small class="text-muted">{{ n.notice_number }}</small>
+                    </div>
+                    <p class="small mb-1 mt-1">{{ n.message }}</p>
+                    {% if n.attachment %}
+                        <a href="{{ n.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Download Notice</a>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="list-group-item small text-muted">No official notifications published for your land yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-gov h-100">
+            <div class="card-header">My Compensation &amp; Payment Status</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light"><tr><th>Parcel</th><th>Proposed</th><th>Approved</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        {% for c in compensations %}
+                        <tr>
+                            <td class="small">{{ c.land_record.survey_number }}/{{ c.land_record.plot_number }}</td>
+                            <td>₹{{ c.proposed_compensation|floatformat:0 }}</td>
+                            <td>{% if c.approved_compensation %}₹{{ c.approved_compensation|floatformat:0 }}{% else %}-{% endif %}</td>
+                            <td><span class="badge bg-info text-dark">{{ c.get_status_display }}</span></td>
+                            <td><a href="{% url 'compensation:detail' c.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No compensation records yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

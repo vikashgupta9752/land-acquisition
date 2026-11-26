@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}Officer Dashboard | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0">Government Officer Panel</h3>
+        <p class="text-muted small mb-0">Manage acquisition projects, land records, surveys, compensation &amp; possession</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'projects:project_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>New Project</a>
+        <a href="{% url 'land_records:create' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-geo-alt me-1"></i>Add Land Record</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-2">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">My Projects</div>
+            <div class="fs-3 fw-bold">{{ total_projects }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="card stat-card accent-info p-3">
+            <div class="text-muted small">Land Parcels</div>
+            <div class="fs-3 fw-bold">{{ total_land_records }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-2">
+        <div class="card stat-card accent-warning p-3">
+            <div class="text-muted small">Pending Surveys</div>
+            <div class="fs-3 fw-bold">{{ pending_surveys }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card accent-success p-3">
+            <div class="text-muted small">Surveys To Verify</div>
+            <div class="fs-3 fw-bold">{{ submitted_surveys }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card accent-danger p-3">
+            <div class="text-muted small">Pending Objections</div>
+            <div class="fs-3 fw-bold">{{ pending_objections }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card card-gov">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Active Acquisition Projects</span>
+                <a href="{% url 'projects:project_list' %}" class="btn btn-sm btn-outline-primary">All Projects</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th>Code</th><th>Project</th><th>District / Village</th><th>Area (Ac)</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in projects %}
+                        <tr>
+                            <td><a href="{% url 'projects:project_detail' p.pk %}" class="fw-semibold">{{ p.project_code }}</a></td>
+                            <td>{{ p.name }}</td>
+                            <td class="small">{{ p.district }} / {{ p.village }}</td>
+                            <td class="small">{{ p.acquired_area_acres }} / {{ p.required_area_acres }}</td>
+                            <td><span class="badge bg-{{ p.status_badge }}">{{ p.get_status_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">No projects assigned yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card card-gov mb-4">
+            <div class="card-header">Surveys Awaiting Verification</div>
+            <div class="list-group list-group-flush">
+                {% for s in recent_surveys %}
+                <a href="{% url 'surveys:detail' s.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ s.land_record }}</strong>
+                        <span class="badge bg-info">Submitted</span>
+                    </div>
+                    <div class="small text-muted">Surveyor: {{ s.surveyor.get_full_name|default:s.surveyor.username }}</div>
+                </a>
+                {% empty %}
+                <div class="list-group-item small text-muted">No survey reports pending verification.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card card-gov">
+            <div class="card-header">Pending Objections</div>
+            <div class="list-group list-group-flush">
+                {% for o in recent_objections %}
+                <a href="{% url 'objections:detail' o.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ o.subject|truncatechars:35 }}</strong>
+                        <span class="badge bg-{{ o.status_badge }}">{{ o.get_status_display }}</span>
+                    </div>
+                    <div class="small text-muted">{{ o.landowner.full_name }} &bull; {{ o.project.project_code }}</div>
+                </a>
+                {% empty %}
+                <div class="list-group-item small text-muted">No pending objections.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

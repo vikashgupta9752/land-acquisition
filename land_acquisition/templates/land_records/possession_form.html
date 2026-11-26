@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Record Possession | NLAMS{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card card-gov">
+            <div class="card-header">Record Land Possession &mdash; {{ lr }}</div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3"><label class="form-label small fw-semibold">Possession Date</label>{{ form.possession_date }}</div>
+                    <div class="mb-3"><label class="form-label small fw-semibold">Witness Names</label>{{ form.witness_names }}</div>
+                    <div class="mb-3"><label class="form-label small fw-semibold">Possession Certificate (PDF/Image)</label>{{ form.possession_document }}</div>
+                    <div class="mb-3"><label class="form-label small fw-semibold">Remarks</label>{{ form.remarks }}</div>
+                    <div class="form-check mb-3">
+                        {{ form.mark_acquisition_completed }}
+                        <label class="form-check-label small">{{ form.mark_acquisition_completed.label }}</label>
+                    </div>
+                    <button class="btn btn-warning fw-semibold">Confirm &amp; Record Possession</button>
+                    <a href="{% url 'land_records:detail' lr.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

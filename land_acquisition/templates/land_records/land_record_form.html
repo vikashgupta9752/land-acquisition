@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">{{ title }}</h3>
+    <a href="{% url 'land_records:list' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card card-gov">
+            <div class="card-header">Parcel Details</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.boundary_geojson }}
+                    <div class="row g-3">
+                        {% for field in form %}
+                            {% if field.name != 'boundary_geojson' %}
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4">Save Land Record</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card card-gov">
+            <div class="card-header">Parcel Coordinates &amp; Boundary</div>
+            <div class="card-body">
+                <p class="small text-muted">Click on the map to set parcel coordinates or draw the parcel polygon.</p>
+                <div id="landMap" class="map-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    const geoInput = document.getElementById('id_boundary_geojson');
+    const initLat = parseFloat(latInput.value) || 19.0760;
+    const initLng = parseFloat(lngInput.value) || 72.8777;
+
+    const map = L.map('landMap').setView([initLat, initLng], 12);
+    nlamsAddTileLayer(map);
+
+    let marker = (latInput.value && lngInput.value) ? L.marker([initLat, initLng]).addTo(map) : null;
+    map.on('click', function(e) {
+        latInput.value = e.latlng.lat.toFixed(6);
+        lngInput.value = e.latlng.lng.toFixed(6);
+        if (marker) map.removeLayer(marker);
+        marker = L.marker(e.latlng).addTo(map);
+    });
+
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+    const drawControl = new L.Control.Draw({
+        edit: { featureGroup: drawnItems },
+        draw: { polygon: true, rectangle: true, polyline: false, circle: false, marker: false, circlemarker: false }
+    });
+    map.addControl(drawControl);
+    map.on(L.Draw.Event.CREATED, function(e) {
+        drawnItems.clearLayers();
+        drawnItems.addLayer(e.layer);
+        geoInput.value = JSON.stringify(drawnItems.toGeoJSON());
+    });
+});
+</script>
+{% endblock %}

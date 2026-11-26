@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Monitoring &amp; Decision Support | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h3 class="fw-bold mb-0">Monitoring &amp; Decision Support Panel</h3>
+        <p class="text-muted small mb-0">Real-time national land acquisition analytics, progress tracking &amp; delay alerts</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'monitoring:reports_hub' %}" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-bar-graph me-1"></i>Download Reports (CSV / PDF)</a>
+    </div>
+</div>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-4"><input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search project code, name, or village..."></div>
+    <div class="col-md-3"><input type="text" name="district" value="{{ district }}" class="form-control form-control-sm" placeholder="Filter by district..."></div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-outline-primary">Apply Filter</button>
+        <a href="{% url 'monitoring:dashboard' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3"><div class="card stat-card p-3"><div class="small text-muted">Total Projects / Landowners</div><div class="fs-4 fw-bold">{{ total_projects }} / {{ total_landowners }}</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card stat-card accent-success p-3"><div class="small text-muted">Land Acquired / Required</div><div class="fs-4 fw-bold">{{ total_acquired }} / {{ total_required }} Ac</div><div class="small text-muted">Pending: {{ total_pending_land }} Ac</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card stat-card accent-info p-3"><div class="small text-muted">Surveys (Completed / Pending)</div><div class="fs-4 fw-bold">{{ completed_surveys }} / {{ pending_surveys }}</div><div class="small text-muted">Objections: {{ total_objections }} ({{ approved_objections }} App / {{ rejected_objections }} Rej)</div></div></div>
+    <div class="col-sm-6 col-xl-3"><div class="card stat-card accent-warning p-3"><div class="small text-muted">Compensation Paid / Pending</div><div class="fs-5 fw-bold">₹{{ total_paid_comp|floatformat:0 }}</div><div class="small text-muted">Est: ₹{{ total_estimated_comp|floatformat:0 }} | Pending: ₹{{ total_pending_comp|floatformat:0 }}</div></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card card-gov h-100">
+            <div class="card-header">Project-wise Land Required vs Acquired (Acres)</div>
+            <div class="card-body"><canvas id="landProgressChart" height="190"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="card card-gov h-100">
+            <div class="card-header">Compensation Distribution</div>
+            <div class="card-body"><canvas id="compChart" height="220"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="card card-gov h-100">
+            <div class="card-header">Objections Status</div>
+            <div class="card-body"><canvas id="objChart" height="220"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card card-gov h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>National Acquisition GIS Map</span>
+                <span class="small"><span class="badge bg-success">Acquired</span> <span class="badge bg-warning text-dark">Surveyed</span> <span class="badge bg-danger">Pending</span></span>
+            </div>
+            <div class="card-body"><div id="monitoringMap" class="map-container"></div></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card card-gov h-100">
+            <div class="card-header text-danger"><i class="bi bi-exclamation-octagon me-1"></i>Delayed Projects ({{ delayed_projects|length }})</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light"><tr><th>Code</th><th>District</th><th>Target Date</th><th>Progress</th></tr></thead>
+                    <tbody>
+                        {% for p in delayed_projects %}
+                        <tr>
+                            <td><a href="{% url 'projects:project_detail' p.pk %}" class="fw-semibold">{{ p.project_code }}</a></td>
+                            <td class="small">{{ p.district }}</td>
+                            <td class="small text-danger">{{ p.target_completion_date }}</td>
+                            <td class="small">{{ p.progress_percent }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-center text-muted py-3">No delayed projects!</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card card-gov">
+            <div class="card-header">District-wise Acquisition Summary</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light"><tr><th>District</th><th>Projects</th><th>Required (Ac)</th><th>Acquired (Ac)</th></tr></thead>
+                    <tbody>
+                        {% for d in district_stats %}
+                        <tr><td class="fw-semibold">{{ d.district }}</td><td>{{ d.project_count }}</td><td>{{ d.required_area }}</td><td>{{ d.acquired_area }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card card-gov">
+            <div class="card-header">Village-wise Land Parcel Summary</div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light"><tr><th>Village</th><th>District</th><th>Parcels</th><th>Total Area (Ac)</th></tr></thead>
+                    <tbody>
+                        {% for v in village_stats %}
+                        <tr><td class="fw-semibold">{{ v.village }}</td><td>{{ v.district }}</td><td>{{ v.parcel_count }}</td><td>{{ v.total_area }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new Chart(document.getElementById('landProgressChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ project_labels_json|safe }},
+            datasets: [
+                { label: 'Required (Ac)', data: {{ project_required_json|safe }}, backgroundColor: '#1b4f72' },
+                { label: 'Acquired (Ac)', data: {{ project_acquired_json|safe }}, backgroundColor: '#198754' }
+            ]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('compChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Proposed', 'Approved', 'Paid', 'Pending'],
+            datasets: [{ data: {{ comp_chart_json|safe }}, backgroundColor: ['#0dcaf0', '#2e86c1', '#198754', '#f39c12'] }]
+        }
+    });
+
+    new Chart(document.getElementById('objChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Submitted', 'Under Review', 'Approved', 'Rejected'],
+            datasets: [{ data: {{ obj_chart_json|safe }}, backgroundColor: ['#dc3545', '#f39c12', '#198754', '#6c757d'] }]
+        }
+    });
+
+    const markers = {{ map_markers_json|safe }};
+    const map = L.map('monitoringMap').setView([19.5, 75.5], 6);
+    nlamsAddTileLayer(map);
+    const colors = { acquired: '#198754', surveyed: '#f39c12', pending: '#dc3545' };
+    markers.forEach(m => {
+        L.circleMarker([m.lat, m.lng], {
+            radius: 7, fillColor: colors[m.category] || '#dc3545', color: '#fff', weight: 1.5, fillOpacity: 0.9
+        }).addTo(map).bindPopup(`<strong>${m.project}</strong><br>Survey ${m.survey_number}/${m.plot_number} (${m.village})<br>Area: ${m.area} Ac<br>Status: ${m.status}`);
+    });
+});
+</script>
+{% endblock %}

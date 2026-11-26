@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Compensation Calculator | NLAMS{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3">Automatic Land Compensation Calculator</h3>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card card-gov">
+            <div class="card-header">Valuation Inputs</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-success mt-4">Save Proposed Compensation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card card-gov">
+            <div class="card-header">Live Valuation Summary</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr><th>Total Land Area</th><td class="text-end"><span id="prev_area">0</span> Acres</td></tr>
+                    <tr><th>Rate Per Acre</th><td class="text-end">₹<span id="prev_rate">0</span></td></tr>
+                    <tr><th>Base Land Value</th><td class="text-end fw-semibold">₹<span id="prev_base">0</span></td></tr>
+                    <tr><th>Additional Compensation (Solatium + Allowances)</th><td class="text-end">₹<span id="prev_add">0</span></td></tr>
+                    <tr class="table-primary"><th>Final Proposed Compensation</th><td class="text-end fw-bold fs-5">₹<span id="prev_total">0</span></td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function updateCalc() {
+    const num = id => parseFloat(document.getElementById(id)?.value) || 0;
+    const area = num('id_land_area_acres');
+    const rate = num('id_rate_per_acre');
+    const solPct = num('id_solatium_percent');
+    const struct = num('id_structure_compensation');
+    const trees = num('id_tree_crop_compensation');
+    const interest = num('id_interest_amount');
+    const other = num('id_other_allowance');
+
+    const base = area * rate;
+    const solatium = base * (solPct / 100);
+    const additional = solatium + struct + trees + interest + other;
+    const total = base + additional;
+
+    document.getElementById('prev_area').innerText = area.toFixed(2);
+    document.getElementById('prev_rate').innerText = rate.toLocaleString('en-IN');
+    document.getElementById('prev_base').innerText = base.toLocaleString('en-IN');
+    document.getElementById('prev_add').innerText = additional.toLocaleString('en-IN');
+    document.getElementById('prev_total').innerText = total.toLocaleString('en-IN');
+}
+document.querySelectorAll('input').forEach(el => el.addEventListener('input', updateCalc));
+document.addEventListener('DOMContentLoaded', updateCalc);
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Survey {{ lr.survey_number }} / Plot {{ lr.plot_number }} | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h3 class="fw-bold mb-0">Survey {{ lr.survey_number }} / Plot {{ lr.plot_number }}</h3>
+        <p class="text-muted small mb-0">Project: <a href="{% url 'projects:project_detail' lr.project.pk %}">{{ lr.project.project_code }}</a> &bull; Owner: {{ lr.landowner.full_name }}</p>
+    </div>
+    {% if user.profile.role == 'ADMIN' or user.profile.role == 'OFFICER' %}
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'surveys:assign' %}?land_record={{ lr.pk }}" class="btn btn-sm btn-primary"><i class="bi bi-compass me-1"></i>Assign Survey</a>
+        <a href="{% url 'compensation:calculate' %}?land_record={{ lr.pk }}" class="btn btn-sm btn-success"><i class="bi bi-calculator me-1"></i>Calculate Compensation</a>
+        <a href="{% url 'land_records:record_possession' lr.pk %}" class="btn btn-sm btn-warning"><i class="bi bi-key me-1"></i>Record Possession</a>
+        <a href="{% url 'land_records:edit' lr.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card card-gov h-100">
+            <div class="card-header">Parcel &amp; Ownership Information</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-sm-5">Landowner</dt><dd class="col-sm-7">{{ lr.landowner.full_name }} ({{ lr.landowner.phone }})</dd>
+                    <dt class="col-sm-5">Village / District</dt><dd class="col-sm-7">{{ lr.village }}, {{ lr.district }}</dd>
+                    <dt class="col-sm-5">Area</dt><dd class="col-sm-7">{{ lr.area_acres }} Acres</dd>
+                    <dt class="col-sm-5">Land Type / Usage</dt><dd class="col-sm-7">{{ lr.get_land_type_display }} &mdash; {{ lr.current_usage|default:"-" }}</dd>
+                    <dt class="col-sm-5">Acquisition Status</dt><dd class="col-sm-7"><span class="badge bg-{{ lr.status_badge }}">{{ lr.get_acquisition_status_display }}</span></dd>
+                    <dt class="col-sm-5">Possession Status</dt><dd class="col-sm-7"><span class="badge bg-secondary">{{ lr.get_possession_status_display }}</span></dd>
+                    <dt class="col-sm-5">Compensation</dt>
+                    <dd class="col-sm-7">
+                        {% if compensation %}
+                            <a href="{% url 'compensation:detail' compensation.pk %}" class="fw-semibold">₹{{ compensation.proposed_compensation|floatformat:0 }} ({{ compensation.get_status_display }})</a>
+                        {% else %}Not calculated yet{% endif %}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-gov h-100">
+            <div class="card-header">Parcel Location Map</div>
+            <div class="card-body">
+                {% if lr.latitude and lr.longitude %}
+                    <div id="parcelDetailMap" class="map-container" style="height: 260px;"></div>
+                {% else %}
+                    <p class="text-muted small mb-0">No coordinates recorded for this land parcel yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card card-gov">
+            <div class="card-header">Survey Assignments</div>
+            <div class="list-group list-group-flush">
+                {% for s in surveys %}
+                <a href="{% url 'surveys:detail' s.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <span>Surveyor: {{ s.surveyor.get_full_name|default:s.surveyor.username }}</span>
+                    <span class="badge bg-{{ s.status_badge }}">{{ s.get_status_display }}</span>
+                </a>
+                {% empty %}
+                <div class="list-group-item small text-muted">No surveys assigned.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-gov">
+            <div class="card-header">Objections</div>
+            <div class="list-group list-group-flush">
+                {% for o in objections %}
+                <a href="{% url 'objections:detail' o.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <span>{{ o.subject }}</span>
+                    <span class="badge bg-{{ o.status_badge }}">{{ o.get_status_display }}</span>
+                </a>
+                {% empty %}
+                <div class="list-group-item small text-muted">No objections filed.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+{% if lr.latitude and lr.longitude %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const map = L.map('parcelDetailMap').setView([{{ lr.latitude }}, {{ lr.longitude }}], 14);
+    nlamsAddTileLayer(map);
+    L.marker([{{ lr.latitude }}, {{ lr.longitude }}]).addTo(map)
+        .bindPopup('Survey {{ lr.survey_number }} / Plot {{ lr.plot_number }}').openPopup();
+});
+</script>
+{% endif %}
+{% endblock %}

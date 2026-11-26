@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">User Management</h3>
+    <a href="{% url 'accounts:user_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Create User</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search username or name...">
+    </div>
+    <div class="col-md-3">
+        <select name="role" class="form-select form-select-sm">
+            <option value="">All Roles</option>
+            <option value="ADMIN" {% if role_filter == 'ADMIN' %}selected{% endif %}>Administrator</option>
+            <option value="OFFICER" {% if role_filter == 'OFFICER' %}selected{% endif %}>Government Officer</option>
+            <option value="SURVEYOR" {% if role_filter == 'SURVEYOR' %}selected{% endif %}>Surveyor</option>
+            <option value="LANDOWNER" {% if role_filter == 'LANDOWNER' %}selected{% endif %}>Landowner</option>
+            <option value="MONITORING" {% if role_filter == 'MONITORING' %}selected{% endif %}>Monitoring Official</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-outline-primary">Filter</button>
+    </div>
+</form>
+
+<div class="card card-gov">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr><th>Username</th><th>Name</th><th>Role</th><th>Department</th><th>Status</th><th class="text-end">Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for prof in profiles %}
+                <tr>
+                    <td class="fw-semibold">{{ prof.user.username }}</td>
+                    <td>{{ prof.user.get_full_name|default:"-" }}</td>
+                    <td><span class="badge bg-info text-dark">{{ prof.get_role_display }}</span></td>
+                    <td>{{ prof.department.code|default:"-" }}</td>
+                    <td>
+                        {% if prof.user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'accounts:user_edit' prof.user.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form method="post" action="{% url 'accounts:user_toggle_active' prof.user.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-warning">{% if prof.user.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+                        </form>
+                        <form method="post" action="{% url 'accounts:user_delete' prof.user.id %}" class="d-inline" onsubmit="return confirm('Delete this user?');">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

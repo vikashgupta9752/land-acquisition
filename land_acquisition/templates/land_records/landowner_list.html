@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Landowners | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Registered Landowners</h3>
+    <a href="{% url 'land_records:landowner_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Register Landowner</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4"><input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="Search name, phone, village..."></div>
+    <div class="col-auto"><button class="btn btn-sm btn-outline-primary">Search</button></div>
+</form>
+<div class="card card-gov">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Name</th><th>Phone</th><th>Village / District</th><th>Portal Account</th></tr></thead>
+            <tbody>
+                {% for o in owners %}
+                <tr>
+                    <td class="fw-semibold">{{ o.full_name }}</td>
+                    <td>{{ o.phone }}</td>
+                    <td class="small">{{ o.village }}, {{ o.district }}</td>
+                    <td>{% if o.user %}<span class="badge bg-success">{{ o.user.username }}</span>{% else %}<span class="badge bg-secondary">Not Linked</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

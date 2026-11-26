@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Compensation Details | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-0">Compensation Breakdown &mdash; {{ comp.land_record }}</h3>
+        <p class="text-muted small mb-0">Landowner: {{ comp.land_record.landowner.full_name }} &bull; Project: {{ comp.project.project_code }}</p>
+    </div>
+    <span class="badge bg-primary fs-6">{{ comp.get_status_display }}</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card card-gov h-100">
+            <div class="card-header">Estimated, Proposed &amp; Approved Valuation</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr><th>Total Land Area</th><td class="text-end">{{ comp.land_area_acres }} Acres</td></tr>
+                    <tr><th>Rate Per Acre</th><td class="text-end">₹{{ comp.rate_per_acre|floatformat:2 }}</td></tr>
+                    <tr><th>Base Land Value (Estimated)</th><td class="text-end">₹{{ comp.base_land_value|floatformat:2 }}</td></tr>
+                    <tr><th>Solatium ({{ comp.solatium_percent }}%)</th><td class="text-end">₹{{ comp.solatium_amount|floatformat:2 }}</td></tr>
+                    <tr><th>Structures / Trees / Interest / Other</th><td class="text-end">₹{{ comp.additional_compensation|floatformat:2 }}</td></tr>
+                    <tr class="table-info"><th>Final Proposed Compensation</th><td class="text-end fw-bold">₹{{ comp.proposed_compensation|floatformat:2 }}</td></tr>
+                    <tr class="table-success"><th>Officially Approved Compensation</th><td class="text-end fw-bold">{% if comp.approved_compensation %}₹{{ comp.approved_compensation|floatformat:2 }}{% else %}Pending Approval{% endif %}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        {% if user.profile.role in 'ADMIN,OFFICER' %}
+        <div class="card card-gov mb-3">
+            <div class="card-header">Approve Official Compensation</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'compensation:approve' comp.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-2"><label class="form-label small fw-semibold">Approved Amount (₹)</label>{{ approval_form.approved_compensation }}</div>
+                    <div class="mb-2"><label class="form-label small fw-semibold">Remarks</label>{{ approval_form.valuation_remarks }}</div>
+                    <button class="btn btn-success btn-sm">Approve Compensation</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-gov">
+            <div class="card-header">Record / Update Payment</div>
+            <div class="card-body">
+                <form method="post" action="{% url 'compensation:payment_record' comp.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        {% for field in payment_form %}
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-primary btn-sm mt-3">Save Payment Record</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card card-gov">
+    <div class="card-header">Payment Disbursement History</div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Ref</th><th>Mode</th><th>Amount</th><th>Date</th><th>Status</th><th>Receipt</th></tr></thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td>{{ p.transaction_reference|default:"-" }}</td>
+                    <td>{{ p.get_payment_mode_display }}</td>
+                    <td class="fw-semibold">₹{{ p.amount|floatformat:2 }}</td>
+                    <td>{{ p.payment_date|default:"-" }}</td>
+                    <td><span class="badge bg-{{ p.status_badge }}">{{ p.get_status_display }}</span></td>
+                    <td>{% if p.receipt_document %}<a href="{{ p.receipt_document.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">Download</a>{% else %}-{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-3">No payments recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

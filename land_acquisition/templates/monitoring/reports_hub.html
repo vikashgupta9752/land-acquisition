@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Reports Hub | NLAMS{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold mb-0">Official Reports &amp; Data Export</h3>
+    <p class="text-muted small mb-0">Generate and download real-time reports in CSV or PDF format directly from the database</p>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">1. Project-wise Acquisition Report</h6>
+            <p class="small text-muted">Summary of all projects, required vs acquired area, and status.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'projects' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'projects' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">2. Landowner-wise Report</h6>
+            <p class="small text-muted">Registered landowners, parcel counts, and total affected area.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'landowners' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'landowners' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">3. Village-wise Acquisition Report</h6>
+            <p class="small text-muted">Village and district breakdown of parcels and acquired counts.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'villages' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'villages' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">4. Survey Completion Report</h6>
+            <p class="small text-muted">Field survey assignments, surveyors, and verification status.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'surveys' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'surveys' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">5. Objection Report</h6>
+            <p class="small text-muted">Citizen objections by category, project, and review outcome.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'objections' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'objections' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">6. Compensation Report</h6>
+            <p class="small text-muted">Proposed and officially approved compensation amounts per parcel.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'compensation' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'compensation' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">7. Payment Report</h6>
+            <p class="small text-muted">Disbursement references, payment modes, dates, and statuses.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'payments' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'payments' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card card-gov h-100 p-3">
+            <h6 class="fw-bold">8. Project Delay Report</h6>
+            <p class="small text-muted">Projects that have exceeded their target completion date.</p>
+            <div class="mt-auto d-flex gap-2">
+                <a href="{% url 'monitoring:export_report' 'delays' 'csv' %}" class="btn btn-sm btn-outline-success">CSV</a>
+                <a href="{% url 'monitoring:export_report' 'delays' 'pdf' %}" class="btn btn-sm btn-outline-danger">PDF</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

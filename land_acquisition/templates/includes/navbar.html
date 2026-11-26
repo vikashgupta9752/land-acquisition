@@ -1,0 +1,39 @@
+<nav class="navbar navbar-expand-lg navbar-dark navbar-gov sticky-top px-3">
+    <button class="btn btn-outline-light btn-sm d-md-none me-2" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+        <i class="bi bi-list"></i>
+    </button>
+    <a class="navbar-brand fw-semibold d-flex align-items-center" href="{% url 'accounts:dashboard_redirect' %}">
+        <i class="bi bi-bank2 me-2 text-warning"></i>
+        <span>NLAMS &mdash; Land Acquisition Portal</span>
+    </a>
+
+    <div class="ms-auto d-flex align-items-center gap-2 gap-md-3">
+        <button type="button" class="btn btn-outline-light btn-sm d-flex align-items-center gap-1" onclick="toggleNlamsTheme()" title="Toggle Light / Dark Mode">
+            <i id="themeToggleIcon" class="bi bi-moon-stars-fill"></i>
+            <span id="themeToggleLabel" class="d-none d-sm-inline">Dark</span>
+        </button>
+
+        <a href="{% url 'notifications:list' %}" class="btn btn-outline-light btn-sm position-relative">
+            <i class="bi bi-bell"></i>
+            {% if unread_notification_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ unread_notification_count }}
+                </span>
+            {% endif %}
+        </a>
+
+        <div class="dropdown">
+            <a class="btn btn-outline-light btn-sm dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ user.get_full_name|default:user.username }}
+                <span class="badge bg-warning text-dark ms-1">{{ user.profile.get_role_display|default:"User" }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'accounts:dashboard_redirect' %}"><i class="bi bi-speedometer2 me-2"></i>My Dashboard</a></li>
+                <li><a class="dropdown-item" href="{% url 'notifications:list' %}"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>

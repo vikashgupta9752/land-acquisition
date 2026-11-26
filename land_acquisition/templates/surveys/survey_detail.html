@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Survey #{{ assignment.id }} | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-0">Survey #{{ assignment.id }} &mdash; {{ assignment.land_record }}</h3>
+        <p class="text-muted small mb-0">Project: {{ assignment.project.project_code }} &bull; Surveyor: {{ assignment.surveyor.get_full_name|default:assignment.surveyor.username }}</p>
+    </div>
+    <span class="badge bg-{{ assignment.status_badge }} fs-6">{{ assignment.get_status_display }}</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card card-gov mb-3">
+            <div class="card-header">Assignment &amp; Landowner Info</div>
+            <div class="card-body small">
+                <p><strong>Landowner:</strong> {{ assignment.land_record.landowner.full_name }}</p>
+                <p><strong>Phone:</strong> {{ assignment.land_record.landowner.phone }}</p>
+                <p><strong>Village / District:</strong> {{ assignment.land_record.village }}, {{ assignment.land_record.district }}</p>
+                <p><strong>Recorded Area:</strong> {{ assignment.land_record.area_acres }} Acres</p>
+                <p><strong>Instructions:</strong> {{ assignment.instructions|default:"Standard field inspection." }}</p>
+                {% if assignment.officer_remarks %}
+                    <div class="alert alert-info py-2 mb-0"><strong>Officer Remarks:</strong> {{ assignment.officer_remarks }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.profile.role == 'SURVEYOR' and assignment.status == 'ASSIGNED' %}
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_in_progress">
+            <button class="btn btn-warning w-100 fw-semibold">Start Field Inspection (Mark In Progress)</button>
+        </form>
+        {% endif %}
+
+        {% if user.profile.role in 'OFFICER,ADMIN' and assignment.status == 'SUBMITTED' %}
+        <div class="card card-gov">
+            <div class="card-header">Officer Verification</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Verification Remarks</label>
+                        <textarea name="officer_remarks" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button name="action" value="verify" class="btn btn-success">Verify Survey</button>
+                        <button name="action" value="reject" class="btn btn-danger">Reject Survey</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-7">
+        {% if report %}
+        <div class="card card-gov mb-4">
+            <div class="card-header">Submitted Inspection Report</div>
+            <div class="card-body small">
+                <div class="row g-2 mb-3">
+                    <div class="col-sm-6"><strong>Actual Measured Area:</strong> {{ report.actual_area_acres }} Acres</div>
+                    <div class="col-sm-6"><strong>Verified Land Type:</strong> {{ report.verified_land_type }}</div>
+                    <div class="col-sm-6"><strong>Current Usage:</strong> {{ report.current_land_usage }}</div>
+                    <div class="col-sm-6"><strong>Inspection Date:</strong> {{ report.inspection_date }}</div>
+                    <div class="col-sm-6"><strong>Boundary Verified:</strong> {{ report.boundary_verified|yesno:"Yes,No" }}</div>
+                    <div class="col-sm-6"><strong>Encroachment Found:</strong> {{ report.encroachment_found|yesno:"Yes,No" }}</div>
+                    <div class="col-12"><strong>Structures / Trees:</strong> {{ report.structures_present|default:"None" }} / {{ report.trees_crops_details|default:"None" }}</div>
+                    <div class="col-12"><strong>Inspection Remarks:</strong> {{ report.inspection_remarks }}</div>
+                </div>
+                <div class="row g-2">
+                    {% if report.photo_1 %}
+                        <div class="col-md-6"><img src="{{ report.photo_1.url }}" class="img-fluid rounded border" alt="Site Photo 1"></div>
+                    {% endif %}
+                    {% if report.photo_2 %}
+                        <div class="col-md-6"><img src="{{ report.photo_2.url }}" class="img-fluid rounded border" alt="Site Photo 2"></div>
+                    {% endif %}
+                </div>
+                {% if report.report_document %}
+                    <a href="{{ report.report_document.url }}" target="_blank" class="btn btn-sm btn-outline-primary mt-3"><i class="bi bi-download me-1"></i>Download Survey Document</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user.profile.role == 'SURVEYOR' and assignment.status in 'ASSIGNED,IN_PROGRESS,REJECTED' %}
+        <div class="card card-gov">
+            <div class="card-header">Submit / Update Field Survey Report</div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="submit_report">
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-primary mt-3">Submit Survey Report</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

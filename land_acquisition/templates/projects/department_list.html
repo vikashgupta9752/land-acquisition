@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Departments | NLAMS{% endblock %}
+{% block content %}
+<h3 class="fw-bold mb-3">Government Departments</h3>
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card card-gov">
+            <div class="card-header">Add Department</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                    <button class="btn btn-primary btn-sm">Create Department</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card card-gov">
+            <div class="card-header">Registered Departments</div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Code</th><th>Name</th><th>Head</th><th>Email</th></tr></thead>
+                    <tbody>
+                        {% for d in departments %}
+                        <tr>
+                            <td class="fw-semibold">{{ d.code }}</td>
+                            <td>{{ d.name }}</td>
+                            <td class="small">{{ d.head_name|default:"-" }}</td>
+                            <td class="small">{{ d.contact_email|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

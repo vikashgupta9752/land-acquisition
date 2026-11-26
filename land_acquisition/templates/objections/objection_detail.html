@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Objection #{{ obj.id }} | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h3 class="fw-bold mb-0">Objection #{{ obj.id }}: {{ obj.subject }}</h3>
+        <p class="text-muted small mb-0">{{ obj.project.project_code }} &bull; {{ obj.land_record }} &bull; Filed by {{ obj.landowner.full_name }}</p>
+    </div>
+    <span class="badge bg-{{ obj.status_badge }} fs-6">{{ obj.get_status_display }}</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card card-gov">
+            <div class="card-header">Objection Details</div>
+            <div class="card-body">
+                <p><strong>Category:</strong> {{ obj.get_category_display }}</p>
+                <p><strong>Description:</strong><br>{{ obj.description|linebreaksbr }}</p>
+                {% if obj.supporting_document %}
+                    <a href="{{ obj.supporting_document.url }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-download me-1"></i>Download Supporting Document</a>
+                {% endif %}
+                {% if obj.officer_remarks %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <strong>Officer Response ({{ obj.reviewed_by.username|default:"Officer" }}):</strong><br>
+                        {{ obj.officer_remarks }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if user.profile.role in 'ADMIN,OFFICER' %}
+    <div class="col-lg-5">
+        <div class="card card-gov">
+            <div class="card-header">Officer Review &amp; Decision</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3"><label class="form-label small fw-semibold">Decision Status</label>{{ form.status }}</div>
+                    <div class="mb-3"><label class="form-label small fw-semibold">Official Remarks</label>{{ form.officer_remarks }}</div>
+                    <button class="btn btn-primary">Save Decision</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

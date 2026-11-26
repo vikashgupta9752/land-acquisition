@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Citizen Registration | NLAMS{% endblock %}
+{% block auth_content %}
+<div class="auth-wrapper d-flex align-items-center justify-content-center p-3">
+    <div class="card shadow-lg border-0" style="max-width: 640px; width: 100%;">
+        <div class="card-body p-4">
+            <div class="text-center mb-3">
+                <i class="bi bi-person-plus fs-2 text-primary"></i>
+                <h4 class="fw-bold mt-1">Landowner / Citizen Registration</h4>
+                <p class="text-muted small">Create an account to monitor your land acquisition status and compensation.</p>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger small">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">First Name</label>
+                        {{ form.first_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Last Name</label>
+                        {{ form.last_name }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Username</label>
+                        {{ form.username }}
+                        <div class="text-danger small">{{ form.username.errors }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Email</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Phone</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Village</label>
+                        {{ form.village }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">District</label>
+                        {{ form.district }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Address</label>
+                        {{ form.address }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Password</label>
+                        {{ form.password }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Confirm Password</label>
+                        {{ form.confirm_password }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-4 fw-semibold">Register Citizen Account</button>
+            </form>
+            <div class="text-center mt-3 small">
+                Already registered? <a href="{% url 'accounts:login' %}" class="fw-semibold">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Objections | NLAMS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Landowner Objections &amp; Grievances</h3>
+    {% if user.profile.role == 'LANDOWNER' %}
+        <a href="{% url 'objections:submit' %}" class="btn btn-danger btn-sm"><i class="bi bi-plus-circle me-1"></i>Submit Objection</a>
+    {% endif %}
+</div>
+<div class="card card-gov">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>ID</th><th>Subject</th><th>Project</th><th>Parcel</th><th>Landowner</th><th>Category</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                {% for o in objections %}
+                <tr>
+                    <td>#{{ o.id }}</td>
+                    <td class="fw-semibold">{{ o.subject }}</td>
+                    <td class="small">{{ o.project.project_code }}</td>
+                    <td class="small">{{ o.land_record.survey_number }}/{{ o.land_record.plot_number }}</td>
+                    <td class="small">{{ o.landowner.full_name }}</td>
+                    <td class="small">{{ o.get_category_display }}</td>
+                    <td><span class="badge bg-{{ o.status_badge }}">{{ o.get_status_display }}</span></td>
+                    <td><a href="{% url 'objections:detail' o.pk %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No objections found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
