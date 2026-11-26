@@ -1,12 +1,21 @@
+# Python
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-*.sqlite3
+
+# Django
+*.log
+local_settings.py
 db.sqlite3
-/media/
-/staticfiles/
-.venv/
-venv/
+media/
+staticfiles/
+
+# Env files
 .env
+*.env
+
+# VSCode
 .vscode/
+
+# OS files
+Thumbs.db
 .DS_Store
